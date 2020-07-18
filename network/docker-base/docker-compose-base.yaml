@@ -1,0 +1,171 @@
+version: '2'
+
+
+services:
+
+  orderer.ifmprofile-network.com:
+    container_name: orderer.ifmprofile-network.com
+    image: hyperledger/fabric-orderer:latest
+    environment:
+      - FABRIC_LOGGING_SPEC=DEBUG
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      # enabled TLS
+      - ORDERER_GENERAL_TLS_ENABLED=false
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      #- GODEBUG=netdns=go
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+    command: orderer
+    volumes:
+    - ../channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+    - ../crypto-config/ordererOrganizations/ifmprofile-network.com/orderers/orderer.ifmprofile-network.com/msp:/var/hyperledger/orderer/msp
+    - ../crypto-config/ordererOrganizations/ifmprofile-network.com/orderers/orderer.ifmprofile-network.com/tls/:/var/hyperledger/orderer/tls
+    - orderer.ifmprofile-network.com:/var/hyperledger/production/orderer
+    ports:
+      - 7050:7050
+
+  peer0.usb.ifmprofile-network.com:
+    container_name: peer0.usb.ifmprofile-network.com
+    extends:
+      file: docker-compose-peer.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer0.usb.ifmprofile-network.com
+      - CORE_PEER_ADDRESS=peer0.usb.ifmprofile-network.com:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.usb.ifmprofile-network.com:7053
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7053
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.usb.ifmprofile-network.com:8051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.usb.ifmprofile-network.com:7051
+      - CORE_PEER_LOCALMSPID=usbMSP
+      - FABRIC_LOGGING_SPEC=INFO
+
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/usb.ifmprofile-network.com/peers/peer0.usb.ifmprofile-network.com/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/usb.ifmprofile-network.com/peers/peer0.usb.ifmprofile-network.com/tls:/etc/hyperledger/fabric/tls
+        - peer0.usb.ifmprofile-network.com:/var/hyperledger/production
+    ports:
+      - 7051:7051
+      - 7053:7053
+
+  peer1.usb.ifmprofile-network.com:
+    container_name: peer1.usb.ifmprofile-network.com
+    extends:
+      file: docker-compose-peer.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer1.usb.ifmprofile-network.com
+      - CORE_PEER_ADDRESS=peer1.usb.ifmprofile-network.com:8051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:8051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.usb.ifmprofile-network.com:8053
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:8053
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.usb.ifmprofile-network.com:8051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.usb.ifmprofile-network.com:7051
+      - CORE_PEER_LOCALMSPID=usbMSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/usb.ifmprofile-network.com/peers/peer1.usb.ifmprofile-network.com/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/usb.ifmprofile-network.com/peers/peer1.usb.ifmprofile-network.com/tls:/etc/hyperledger/fabric/tls
+        - peer1.usb.ifmprofile-network.com:/var/hyperledger/production
+
+    ports:
+      - 8051:8051
+      - 8053:8053
+
+  peer0.jpmc.ifmprofile-network.com:
+    container_name: peer0.jpmc.ifmprofile-network.com
+    extends:
+      file: docker-compose-peer.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer0.jpmc.ifmprofile-network.com
+      - CORE_PEER_ADDRESS=peer0.jpmc.ifmprofile-network.com:9051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.jpmc.ifmprofile-network.com:9053
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9053
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.jpmc.ifmprofile-network.com:9051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.jpmc.ifmprofile-network.com:10051
+      - CORE_PEER_LOCALMSPID=jpmcMSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/jpmc.ifmprofile-network.com/peers/peer0.jpmc.ifmprofile-network.com/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/jpmc.ifmprofile-network.com/peers/peer0.jpmc.ifmprofile-network.com/tls:/etc/hyperledger/fabric/tls
+        - peer0.jpmc.ifmprofile-network.com:/var/hyperledger/production
+    ports:
+      - 9051:9051
+      - 9053:9053
+
+  peer1.jpmc.ifmprofile-network.com:
+    container_name: peer1.jpmc.ifmprofile-network.com
+    extends:
+      file: docker-compose-peer.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer1.jpmc.ifmprofile-network.com
+      - CORE_PEER_ADDRESS=peer1.jpmc.ifmprofile-network.com:10051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:10051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.jpmc.ifmprofile-network.com:10053
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:10053
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.jpmc.ifmprofile-network.com:10051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.jpmc.ifmprofile-network.com:9051
+      - CORE_PEER_LOCALMSPID=jpmcMSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/jpmc.ifmprofile-network.com/peers/peer1.jpmc.ifmprofile-network.com/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/jpmc.ifmprofile-network.com/peers/peer1.jpmc.ifmprofile-network.com/tls:/etc/hyperledger/fabric/tls
+        - peer1.jpmc.ifmprofile-network.com:/var/hyperledger/production
+    ports:
+      - 10051:10051
+      - 10053:10053
+
+  peer0.boa.ifmprofile-network.com:
+    container_name: peer0.boa.ifmprofile-network.com
+    extends:
+      file: docker-compose-peer.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer0.boa.ifmprofile-network.com
+      - CORE_PEER_ADDRESS=peer0.boa.ifmprofile-network.com:11051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:11051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.boa.ifmprofile-network.com:11053
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:11053
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.boa.ifmprofile-network.com:11051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.boa.ifmprofile-network.com:12051
+      - CORE_PEER_LOCALMSPID=boaMSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/boa.ifmprofile-network.com/peers/peer0.boa.ifmprofile-network.com/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/boa.ifmprofile-network.com/peers/peer0.boa.ifmprofile-network.com/tls:/etc/hyperledger/fabric/tls
+        - peer0.boa.ifmprofile-network.com:/var/hyperledger/production
+    ports:
+      - 11051:11051
+      - 11053:11053
+
+  peer1.boa.ifmprofile-network.com:
+    container_name: peer1.boa.ifmprofile-network.com
+    extends:
+      file: docker-compose-peer.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer1.boa.ifmprofile-network.com
+      - CORE_PEER_ADDRESS=peer1.boa.ifmprofile-network.com:12051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:12051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.boa.ifmprofile-network.com:12053
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:12053
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.boa.ifmprofile-network.com:12051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.boa.ifmprofile-network.com:11051
+      - CORE_PEER_LOCALMSPID=boaMSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/boa.ifmprofile-network.com/peers/peer1.boa.ifmprofile-network.com/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/boa.ifmprofile-network.com/peers/peer1.boa.ifmprofile-network.com/tls:/etc/hyperledger/fabric/tls
+        - peer1.boa.ifmprofile-network.com:/var/hyperledger/production
+    ports:
+      - 12051:12051
+      - 12053:12053

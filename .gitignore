@@ -1,0 +1,8 @@
+chaincode/node_modules
+application/node_modules
+identity/iit
+api_test/node_modules
+api_test/test/node_modules
+network/crypto-config
+network/channel-artifacts
+*/node_modules

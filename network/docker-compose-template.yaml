@@ -1,0 +1,322 @@
+version: '2'
+
+volumes:
+  orderer.ifmprofile-network.com:
+  peer0.usb.ifmprofile-network.com:
+  peer1.usb.ifmprofile-network.com:
+  peer0.jpmc.ifmprofile-network.com:
+  peer1.jpmc.ifmprofile-network.com:
+  peer0.boa.ifmprofile-network.com:
+  peer1.boa.ifmprofile-network.com:
+
+networks:
+  ifmprofile:
+
+services:
+
+  ca.usb.ifmprofile-network.com:
+    image: hyperledger/fabric-ca:latest
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca.usb.ifmprofile-network.com
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.usb.ifmprofile-network.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/6c35613dc42068fcf291602a12af88e4a42af3b67c543a2f8561bb3d42e8379d_sk
+    ports:
+      - "7054:7054"
+    command: sh -c 'fabric-ca-server start --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.usb.ifmprofile-network.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/6c35613dc42068fcf291602a12af88e4a42af3b67c543a2f8561bb3d42e8379d_sk -b admin:adminpw -d'
+    volumes:
+      - ./crypto-config/peerOrganizations/usb.ifmprofile-network.com/ca/:/etc/hyperledger/fabric-ca-server-config
+    container_name: ca.usb.ifmprofile-network.com
+    networks:
+      - ifmprofile
+
+  ca.jpmc.ifmprofile-network.com:
+    image: hyperledger/fabric-ca:latest
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca.jpmc.ifmprofile-network.com
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.jpmc.ifmprofile-network.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/d09eb203299e4acade68e76daa3653a53ef281ac1f28835d851eee386c5f99e8_sk
+    ports:
+      - "8054:7054"
+    command: sh -c 'fabric-ca-server start --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.jpmc.ifmprofile-network.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/d09eb203299e4acade68e76daa3653a53ef281ac1f28835d851eee386c5f99e8_sk -b admin:adminpw -d'
+    volumes:
+      - ./crypto-config/peerOrganizations/jpmc.ifmprofile-network.com/ca/:/etc/hyperledger/fabric-ca-server-config
+    container_name: ca.jpmc.ifmprofile-network.com
+    networks:
+      - ifmprofile
+
+  ca.boa.ifmprofile-network.com:
+    image: hyperledger/fabric-ca:latest
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca.boa.ifmprofile-network.com
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.boa.ifmprofile-network.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/39933e15af36185d5cffeaf82909d8e66f28713f95ed47f8c7a5ce03a568027b_sk
+    ports:
+      - "9054:7054"
+    command: sh -c 'fabric-ca-server start --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.boa.ifmprofile-network.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/39933e15af36185d5cffeaf82909d8e66f28713f95ed47f8c7a5ce03a568027b_sk -b admin:adminpw -d'
+    volumes:
+      - ./crypto-config/peerOrganizations/boa.ifmprofile-network.com/ca/:/etc/hyperledger/fabric-ca-server-config
+    container_name: ca.boa.ifmprofile-network.com
+    networks:
+      - ifmprofile
+
+  orderer.ifmprofile-network.com:
+    extends:
+      file:   docker-base/docker-compose-base.yaml
+      service: orderer.ifmprofile-network.com
+    container_name: orderer.ifmprofile-network.com
+    networks:
+      - ifmprofile
+
+  usbCouchdb0:
+    container_name: usbCouchdb0
+    image: hyperledger/fabric-couchdb
+    # Populate the COUCHDB_USER and COUCHDB_PASSWORD to set an admin user and password
+    # for CouchDB.  This will prevent CouchDB from operating in an "Admin Party" mode.
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=password
+    # Comment/Uncomment the port mapping if you want to hide/expose the CouchDB service,
+    # for example map it to utilize Fauxton User Interface in dev environments.
+    ports:
+      - "9984:5984"
+    networks:
+      - ifmprofile
+
+  peer0.usb.ifmprofile-network.com:
+    container_name: peer0.usb.ifmprofile-network.com
+    extends:
+      file:  docker-base/docker-compose-base.yaml
+      service: peer0.usb.ifmprofile-network.com
+    environment:
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=usbCouchdb0:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=password
+    networks:
+      - ifmprofile
+    depends_on:
+      - usbCouchdb0
+
+
+  usbCouchdb1:
+    container_name: usbCouchdb1
+    image: hyperledger/fabric-couchdb
+    # Populate the COUCHDB_USER and COUCHDB_PASSWORD to set an admin user and password
+    # for CouchDB.  This will prevent CouchDB from operating in an "Admin Party" mode.
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=password
+    # Comment/Uncomment the port mapping if you want to hide/expose the CouchDB service,
+    # for example map it to utilize Fauxton User Interface in dev environments.
+    ports:
+      - "10984:5984"
+    networks:
+      - ifmprofile
+
+  peer1.usb.ifmprofile-network.com:
+    container_name: peer1.usb.ifmprofile-network.com
+    extends:
+      file:  docker-base/docker-compose-base.yaml
+      service: peer1.usb.ifmprofile-network.com
+    environment:
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=usbCouchdb1:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=password
+    networks:
+      - ifmprofile
+    depends_on:
+      - usbCouchdb1
+
+  jpmcCouchdb0:
+    container_name: jpmcCouchdb0
+    image: hyperledger/fabric-couchdb
+    # Populate the COUCHDB_USER and COUCHDB_PASSWORD to set an admin user and password
+    # for CouchDB.  This will prevent CouchDB from operating in an "Admin Party" mode.
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=password
+    # Comment/Uncomment the port mapping if you want to hide/expose the CouchDB service,
+    # for example map it to utilize Fauxton User Interface in dev environments.
+    ports:
+      - "11984:5984"
+    networks:
+      - ifmprofile
+
+  peer0.jpmc.ifmprofile-network.com:
+    container_name: peer0.jpmc.ifmprofile-network.com
+    extends:
+      file:  docker-base/docker-compose-base.yaml
+      service: peer0.jpmc.ifmprofile-network.com
+    environment:
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=jpmcCouchdb0:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=password
+    networks:
+      - ifmprofile
+    depends_on:
+      - jpmcCouchdb0
+
+  jpmcCouchdb1:
+    container_name: jpmcCouchdb1
+    image: hyperledger/fabric-couchdb
+    # Populate the COUCHDB_USER and COUCHDB_PASSWORD to set an admin user and password
+    # for CouchDB.  This will prevent CouchDB from operating in an "Admin Party" mode.
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=password
+    # Comment/Uncomment the port mapping if you want to hide/expose the CouchDB service,
+    # for example map it to utilize Fauxton User Interface in dev environments.
+    ports:
+      - "12984:5984"
+    networks:
+      - ifmprofile
+
+  peer1.jpmc.ifmprofile-network.com:
+    container_name: peer1.jpmc.ifmprofile-network.com
+    extends:
+      file:  docker-base/docker-compose-base.yaml
+      service: peer1.jpmc.ifmprofile-network.com
+    environment:
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=jpmcCouchdb1:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=password      
+    networks:
+      - ifmprofile
+    depends_on:
+      - jpmcCouchdb1
+
+  boaCouchdb0:
+    container_name: boaCouchdb0
+    image: hyperledger/fabric-couchdb
+    # Populate the COUCHDB_USER and COUCHDB_PASSWORD to set an admin user and password
+    # for CouchDB.  This will prevent CouchDB from operating in an "Admin Party" mode.
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=password
+    # Comment/Uncomment the port mapping if you want to hide/expose the CouchDB service,
+    # for example map it to utilize Fauxton User Interface in dev environments.
+    ports:
+      - "13984:5984"
+    networks:
+      - ifmprofile
+
+  peer0.boa.ifmprofile-network.com:
+    container_name: peer0.boa.ifmprofile-network.com
+    extends:
+      file:  docker-base/docker-compose-base.yaml
+      service: peer0.boa.ifmprofile-network.com
+    environment:
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=boaCouchdb0:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=password      
+    networks:
+      - ifmprofile
+    depends_on:
+      - boaCouchdb0      
+
+  boaCouchdb1:
+    container_name: boaCouchdb1
+    image: hyperledger/fabric-couchdb
+    # Populate the COUCHDB_USER and COUCHDB_PASSWORD to set an admin user and password
+    # for CouchDB.  This will prevent CouchDB from operating in an "Admin Party" mode.
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=password
+    # Comment/Uncomment the port mapping if you want to hide/expose the CouchDB service,
+    # for example map it to utilize Fauxton User Interface in dev environments.
+    ports:
+      - "14984:5984"
+    networks:
+      - ifmprofile
+
+  peer1.boa.ifmprofile-network.com:
+    container_name: peer1.boa.ifmprofile-network.com
+    extends:
+      file:  docker-base/docker-compose-base.yaml
+      service: peer1.boa.ifmprofile-network.com
+    environment:
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=boaCouchdb1:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=password            
+    networks:
+      - ifmprofile
+    depends_on:
+      - boaCouchdb1     
+
+
+  cli:
+    container_name: cli
+    image: hyperledger/fabric-tools:latest
+    tty: true
+    stdin_open: true
+    environment:
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_ID=cli
+      - CORE_PEER_ADDRESS=peer0.usb.ifmprofile-network.com:7051
+      - CORE_PEER_LOCALMSPID=usbMSP
+      - CORE_PEER_TLS_ENABLED=false
+      - CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/usb.ifmprofile-network.com/peers/peer0.usb.ifmprofile-network.com/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/usb.ifmprofile-network.com/peers/peer0.usb.ifmprofile-network.com/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/usb.ifmprofile-network.com/peers/peer0.usb.ifmprofile-network.com/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/usb.ifmprofile-network.com/users/Admin@usb.ifmprofile-network.com/msp
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: /bin/bash
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./../chaincode/:/opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode/
+   #   - ./../chaincode-advanced/:/opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode-advanced/
+      - ./crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+      - ./scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
+      - ./channel-artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+    depends_on:
+      - ca.usb.ifmprofile-network.com
+      - ca.jpmc.ifmprofile-network.com
+      - ca.boa.ifmprofile-network.com
+      - orderer.ifmprofile-network.com
+      - peer0.usb.ifmprofile-network.com
+      - peer1.usb.ifmprofile-network.com
+      - peer0.jpmc.ifmprofile-network.com
+      - peer1.jpmc.ifmprofile-network.com
+      - peer0.boa.ifmprofile-network.com
+      - peer1.boa.ifmprofile-network.com
+    networks:
+      - ifmprofile
+      
+  chaincode:
+    container_name: chaincode
+    image: hyperledger/fabric-ccenv:latest
+    tty: true
+    environment:
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_ID=chaincode
+      - CORE_PEER_ADDRESS=peer0.usb.ifmprofile-network.com:7051
+      - CORE_PEER_LOCALMSPID=usbMSP
+      - CORE_PEER_TLS_ENABLED=false
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/crypto/peerOrganizations/usb.ifmprofile-network.com/users/Admin@usb.ifmprofile-network.com/msp
+      - CORE_TLS_CLIENT_KEY_PATH=/opt/gopath/src/crypto/peerOrganizations/usb.ifmprofile-network.com/users/Admin@usb.ifmprofile-network.com/tls/client.key
+      - CORE_TLS_CLIENT_CERT_PATH=/opt/gopath/src/crypto/peerOrganizations/usb.ifmprofile-network.com/users/Admin@usb.ifmprofile-network.com/tls/client.crt
+      - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/crypto/peerOrganizations/usb.ifmprofile-network.com/users/Admin@usb.ifmprofile-network.com/tls/ca.crt
+    working_dir: /opt/gopath/src/chaincode
+    command: /bin/bash -c 'sleep 6000000'
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./../chaincode:/opt/gopath/src/chaincode
+     # - ./../chaincode-advanced:/opt/gopath/src/chaincode-advanced
+      - ./crypto-config:/opt/gopath/src/crypto
+    networks:
+      - ifmprofile

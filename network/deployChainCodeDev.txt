@@ -1,0 +1,52 @@
+CORE_PEER_LOCALMSPID="usbMSP"
+CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/usb.ifmprofile-network.com/users/Admin\@usb.ifmprofile-network.com/msp/
+CORE_PEER_ADDRESS=peer0.usb.ifmprofile-network.com:7051
+
+peer chaincode install -n certnet -v 1.1 -l node -p /opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode/
+
+peer chaincode list --installed
+
+CORE_PEER_LOCALMSPID="jpmcMSP"
+CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/jpmc.ifmprofile-network.com/users/Admin\@jpmc.ifmprofile-network.com/msp/
+CORE_PEER_ADDRESS=peer0.jpmc.ifmprofile-network.com:9051
+
+
+
+peer chaincode install -n certnet -v 1.1 -l node -p /opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode/
+
+peer chaincode list --installed
+
+
+
+CORE_PEER_LOCALMSPID="boaMSP"
+CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/boa.ifmprofile-network.com/users/Admin\@boa.ifmprofile-network.com/msp/
+CORE_PEER_ADDRESS=peer0.boa.ifmprofile-network.com:11051
+
+
+
+peer chaincode install -n certnet -v 1.1 -l node -p /opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode/
+
+peer chaincode list --installed
+
+CORE_PEER_LOCALMSPID="usbMSP"
+CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/usb.ifmprofile-network.com/users/Admin\@usb.ifmprofile-network.com/msp/
+CORE_PEER_ADDRESS=peer0.usb.ifmprofile-network.com:7051
+
+peer chaincode instantiate -o orderer.ifmprofile-network.com:7050 -C ifmprofilechannel -n certnet -l node -v 1.1 -c '{"Args":["org.ifmprofile-network.certnet:instantiate"]}' -P "OR
+('usbMSP.member','jpmcMSP.member','boaMSP.member')"
+
+
+
+
+
+peer chaincode invoke -o orderer.ifmprofile-network.com:7050 -C ifmprofilechannel -n certnet -c '{"Args":["org.ifmprofile-network.certnet:createEntity","0002","Yash Shah","yushah8892@gmail.com"]}' 
+
+peer chaincode query -C ifmprofilechannel -n certnet -c '{"Args":["org.ifmprofile-network.certnet:getentity","0002"]}'
+
+peer chaincode query -C ifmprofilechannel -n certnet -c '{"Args":["org.ifmprofile-network.certnet:getAllentity"]}'
+
+
+
+
+
+

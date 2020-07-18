@@ -1,0 +1,27 @@
+OrdererOrgs:
+  - Name: Orderer
+    Domain: ifmprofile-network.com
+    Specs:
+      - Hostname: orderer
+PeerOrgs:
+ - Name: usb
+   Domain: usb.ifmprofile-network.com
+   EnableNodeOUs: true
+   Template:
+      Count: 2
+   Users:
+      Count: 1
+ - Name: jpmc
+   Domain: jpmc.ifmprofile-network.com
+   EnableNodeOUs: true
+   Template:
+      Count: 2
+   Users:
+      Count: 1
+ - Name: boa
+   Domain: boa.ifmprofile-network.com
+   EnableNodeOUs: true
+   Template:
+      Count: 2
+   Users:
+      Count: 1
